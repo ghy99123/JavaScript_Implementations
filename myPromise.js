@@ -145,11 +145,16 @@ class Promise {
         return this.then(null, onRejected);
     }
 
+    //finally返回一个promise,如果参数callback返回待定或拒绝promise，则finally返回callback中返回的promise，
+    //否则，最终promise的值包装为父promise的值
+    //let p1 = Promise.resolve('foo');
+    //let p2 = p1.finally(() => Promise.resolve('foo2'));
+    //console.log(p2); => Promise<resolved>: foo
     finally(callback) {
-        return this.then(value =>{
+        return this.then(value => {
             return Promise.resolve(callback()).then(() => value);
-        },reason => {
-            return Promise.resolve(callback()).then(() => {throw reason});
+        }, reason => {
+            return Promise.resolve(callback()).then(() => { throw reason });
         });
     }
 
@@ -162,12 +167,39 @@ class Promise {
         return new Promise((_, reject) => reject(reason));
     }
 
-    static all() {
-
+    static all(values) {
+        let index = 0;
+        let promisesArr = [];
+        return new Promise((resolve, reject) => {
+            values.forEach((value, i) => {
+                Promise.resolve(value).then(
+                    v => {
+                        promisesArr[i] = v;
+                        if (++index === values.length) {
+                            resolve(promisesArr);
+                        }
+                    },
+                    err => {
+                        reject(err);
+                    }
+                );
+            });
+        });
     }
 
-    static race() {
-
+    static race(values) {
+        return new Promise((resolve, reject) => {
+            for(let v of values){
+                Promise.resolve(v).then(
+                    value => {
+                        resolve(value);
+                    },
+                    reason => {
+                        reject(reason);
+                    }
+                )
+            }
+        });
     }
 
 }
