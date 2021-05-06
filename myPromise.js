@@ -202,8 +202,50 @@ class Promise {
         });
     }
 
+    //ES2020 等待所有promise状态变为fulfilled或rejected，才包装成一个新的promise
+    static allSettled(values){
+        let index = 0;
+        let promisesArr = [];
+        //新promise的状态一定为fulfilled
+        return new Promise((resolve, _) => {
+            values.forEach((v, i) => {
+                Promise.resolve(v).then(
+                    value => {
+                        //包装的对象不是promise对象
+                        promisesArr[i] = {status : FULFILLED, value : value};
+                        if(++index === values.length) resolve(promisesArr);
+                    },
+                    reason => {
+                        promisesArr[i] = {status : REJECTED, reason : reason};
+                        if(++index === values.length) resolve(promiseArr);
+                    }
+                );
+            });
+        });
+    }
+
+    //ES2021 
+    static any(values){
+        let index = 0;
+        let promisesArr = [];
+        return new Promise((resolve, reject) => {
+            values.forEach((v, i) => {
+                Promise.resolve(v).then(
+                    value => {
+                        resolve(value);
+                    },
+                    reason => {
+                        promisesArr[i] = reason;
+                        if(++index === values.length) reject(promisesArr);
+                    }
+                );
+            });
+        });
+    }
+
 }
 
+//测试
 Promise.defer = Promise.deferred = function () {
     let dfd = {};
     dfd.promise = new Promise((resolve, reject) => {
@@ -213,31 +255,5 @@ Promise.defer = Promise.deferred = function () {
     return dfd;
 }
 module.exports = Promise
-
-
-// new MyPromise((resolve, reject) => {
-//     console.log('promise executor run');
-//     //resolve(2);
-//     reject('失败')
-// }).then().then(res => {console.log(res)}, err =>{console.log(err)});
-
-// const promise = new MyPromise((resolve, reject) => {
-//     resolve(1);
-//   }).then(() => {
-//       return new MyPromise((resolve, reject)=>{
-//         reject('dsdsd')
-//       });
-//   }).then((value) => console.log(value), err => console.log(err));
-
-//   setTimeout(console.log, 0, promise)
-
-
-
-
-
-
-
-
-
 
 
